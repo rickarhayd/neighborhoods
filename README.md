@@ -7,7 +7,7 @@ This is a Boston-flavored version of https://github.com/enam/neighborhoods. It's
 See more about this particular project at http://bostonography.com/2015/map-your-neighborhood-again/
 
 * * *
-*original README from https://github.com/enam/neighborhoods* below
+*original README from https://github.com/enam/neighborhoods below*
 
 Crowd sourcing neighborhood boundaries, stories, and descriptions. Making pretty maps.
 
