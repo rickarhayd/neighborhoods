@@ -1,10 +1,17 @@
 #neighborhoods
 
+http://bostonography.com/hoods
+
+This is a Boston-flavored version of https://github.com/enam/neighborhoods. It's set up the same way as in the instructions below. Apart from some hard-coded titles and text for Boston, a key difference between this project and the original is in its drawing tools. This project uses a combination of [Leaflet.editable](https://github.com/yohanboniface/Leaflet.Editable) and a messy hacked-up version of [Leaflet.FreeDraw](https://github.com/Wildhoney/Leaflet.FreeDraw).
+
+See more about this particular project at http://bostonography.com/2015/map-your-neighborhood-again/
+
+* * *
+*original README from https://github.com/enam/neighborhoods* below
+
 Crowd sourcing neighborhood boundaries, stories, and descriptions. Making pretty maps.
 
 This project is designed to collect boundaries and descriptions of neighborhoods and the like, and immediatley make them available for cartographic presentation and exploration.
-
-[Live Site](http://pnwmaps.com/neighborhoods)
 
 ###Steps to Configure 
 
