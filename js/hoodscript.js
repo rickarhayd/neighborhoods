@@ -2,17 +2,15 @@
 ----- Config Vars: Change these to configure for your city or cities-------------
 ---------------------------*/
 var myCities = [  //NAME AND BOUNDS OF CITIES 
-  {name:"Portland",bnds:[[45.22,-123],[45.7814,-122.197]]},
-  {name:"Seattle", bnds:[[47.366,-122.7],[47.9,-121.88]]},
-  {name:"Vancouver",bnds:[[49.023,-123.709],[49.461,-122.4351]]}
+  {name:"Boston",bnds:[[42.195649,-71.285258],[42.550992,-70.836535]]}
 ]
-,tblName = "pnw_table_new" // cartoDB table name
-,usrName = "nicholasm" // your cartoDB username
-,brandText = "extPNW" // top left text and link on site
-,brandLink = "http://extentpnw.com" //top left link on site
+,tblName = "hoods" // cartoDB table name
+,usrName = "bostonography" // your cartoDB username
+,brandText = "Mapping Greater Boston's neighborhoods" // top left text and link on site
+,brandLink = "http://bostonography.com" //top left link on site
 ,giturl = "https://github.com/enam/neighborhoods" //Only change this if you want to link to a fork you made, otherwise you can leave the link to the original repo
-,twiturl = "https://twitter.com/nichom" //Links to my twit acct, change it if you want or remove twitter link altogether
-,myPath = "http://nicholasm.cartodb.com/api/v2"; //this is the root path to your cartoDB instance with the v2 api param
+,twiturl = "https://twitter.com/bostonography" //Links to my twit acct, change it if you want or remove twitter link altogether
+,myPath = "http://bostonography.cartodb.com/api/v2"; //this is the root path to your cartoDB instance with the v2 api param
 /*--------------------------
 -----Other things to change
 ------in /php/callProxy, change the path to your hidden api key.
@@ -25,6 +23,7 @@ var myCities = [  //NAME AND BOUNDS OF CITIES
 var selectedCity = myCities[0]//selected city defaults to first myCities city.
 ,hoodsLayer
 ,map
+,freeDrawLayer
 ,geoJsonLayer
 ,highlightHoods=[]
 ,highlightCount = 0
@@ -36,6 +35,8 @@ var selectedCity = myCities[0]//selected city defaults to first myCities city.
 ,ajaxrunning = false
 ,flagIndex = null
 ,poly//var for leaflet draw 
+,marker
+,geomType
 ,drawnItems//var for drawn polys
 ,nbrhdYears = 999//no data value
 ,cityYears = 999//no data value
@@ -52,24 +53,26 @@ var selectedCity = myCities[0]//selected city defaults to first myCities city.
 //fill array from tools.medialab.sciences-po.fr/iwanthue/index.php
 ,fillArr = ["#E7C265","#8AD4E2","#ECACC1","#95D18F","#E9D5B3","#E1EF7E","#F69D92","#9CD7BF","#B2BD75","#D1D3CF","#DAC1E1","#B3C69F","#D1AB6D","#E9D898","#B0CBE6","#D9B5AB","#86E9E1","#DBEA97","#D1F1E4","#DDEBBB","#DFB991","#F3AD8E","#8CDEB5","#EDAF69","#B9F2A6","#8DC8C4","#C2E887","#E5D670","#EAD483","#C4BF6A"]
 ,toner = L.tileLayer('http://{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}.png', {
-    attribution: '<a href="http://stamen.com/" target="_blank" >Stamen</a>'
+    attribution: '<a href="http://stamen.com/" target="_blank" >Stamen</a> | &copy; <a href="http://openstreetmap.org/" target="_blank" >OpenStreetMap</a> contributors'
 })
 ,sat = L.tileLayer("http://oatile{s}.mqcdn.com/tiles/1.0.0/sat/{z}/{x}/{y}.jpg", {
   attribution: 'Search<a href="http://www.mapquest.com/" target="_blank"><img src="http://developer.mapquest.com/content/osm/mq_logo.png"></a>, NASA/JPL, Caltech, USDA',
   subdomains: '1234'
-});
+})
+,instructed={};
 /*---------------------------
 ----- $(window).load -------
 ---------------------------*/
 function go(){
-
-
+  $( 'body' ).attr('class','make');
+  $('#deletePolyBtn').hide();
   $('#submitPolyBtn').hide();
+  $('.modal-body').css( 'max-height', window.innerHeight - 180 );
   map = new L.Map('map', {
     zoomControl:false,
     center: [0,0],
     zoom: 2,
-
+    editable: true
   });
   var baseMaps = {
     "Road": toner,
@@ -81,91 +84,26 @@ function go(){
   overlg.addTo(map);
   toner.addTo(map);
   map.fitBounds(selectedCity.bnds);
+  map.setView([42.360418, -71.070722],13)
 
   //draw controls
   drawnItems = new L.FeatureGroup();
   map.addLayer(drawnItems);
-  poly = new L.Draw.Polygon(map, {
-      allowIntersection: false,
-      showArea: false,
-      drawError: {
-      color: '#b00b00',
-      timeout: 1000
-    },
-    icon: new L.DivIcon({
-      iconSize: new L.Point(10,10),
-      className: 'leaflet-div-icon leaflet-editing-icon'
-    }),
-    shapeOptions: {
-      stroke: true,
-      color: '#ff0000',
-      weight: 1,
-      opacity: 0.7,
-      fill: true,
-      fillColor: null, //same as color by default
-      fillOpacity: 0.2,
-      clickable: true
-    },
-    guidelineDistance: 5,
-  })
   
-  
-  // Set the title to show on the polygon button
-    L.drawLocal.draw.toolbar.buttons.polygon = 'Draw a sexy polygon!';
-
-    var drawControl = new L.Control.Draw({
-      position: 'topright',
-      draw:false,
-      edit:false
-      
-    });
-    //map.addControl(drawControl);
-
-    map.on('draw:created', function (e) {
-      console.log(e);
-      e.layer.editing.enable();
-      var type = e.layerType,
-        layer = e.layer;
-      drawnItems.addLayer(layer);
-
-      $('#submitPolyBtn').show();
-    });
-
-    map.on('draw:drawstart', function (e) {
-      console.log(e);
-    });
-
-    map.on('draw:edited', function (e) {
-      var layers = e.layers;
-      var countOfEditedLayers = 0;
-      layers.eachLayer(function(layer) {
-        countOfEditedLayers++;
-      });
-      console.log("Edited " + countOfEditedLayers + " layers");
-    });
+   
     //-----------------------------END DRAW CONTROLS---------------------------------------
 
 	//make teh nav and city buttons---------------|<>o|----thhppt---------City buttons Y'All!
-  $("#navDiv").prepend('<a class="navbar-brand" href="'+brandLink+'" target="_blank">'+brandText+'</a>');
-  $("#mapItMenu").append('<li style="top:-9px;padding-right:2px;position:relative"><h3 class="navText">{</h3></li>');
-	for(var i = 0; i<  myCities.length; i++){
-		$("#mapItMenu").append('<li id = '+myCities[i].name+' class="cityState" name='+i+'><a href="#"><span class="tab">'+myCities[i].name+'</span></a></li>');
-		if(i===0){
-				$("#"+myCities[i].name+"").addClass("active");
-		}
-	}
-
-	$('.cityState').click(function() {
-		console.log('cityclicked');
-		$('.cityState').removeClass('active');
-		$(this).addClass('active');
-		document.getElementById("mapTitle").innerHTML = this.id+"<font size='4'><b>NEIGHBORHOODS</b></font>"; 
-    map.fitBounds(myCities[$(this).attr('name')].bnds);
-    selectedCity = myCities[$(this).attr('name')];
-	});
-	$("#mapItMenu").append('<li style="top:-9px;padding-right:2px;position:relative"><h3 class="navText">}</h3></li>');
+  $('<a class="navbar-brand" href="#" target="_blank">'+brandText+'</a>').click(function(e){
+    e.preventDefault();
+    $('#aboutModal').modal('show');
+  }).prependTo('#navDiv');
+  $("#navDiv").prepend('<a class="navbar-brand abbrev" href="'+brandLink+'" target="_blank">'+myCities[0].name+'</a>');
+  
   	//add listeners------------------------------------------------------------------------------------------------------LIsteners Y'All!
-	  $('#aboutModal').modal('show')
+	  $('#aboutModal').modal('show').on('hidden.bs.modal',function(){
+      if ( $('body').hasClass('make') ) showInstructions();
+    })
 	  $("#resultMapBtn").click(function(e){
   });
   $('#resultsInSpace').click (
@@ -183,6 +121,7 @@ function go(){
     var q = "update "+tblName+" set flag = true where cartodb_id = "+flagIndex;
     submitToProxy(q);
     $('#flagModal').modal('hide');
+    $('.flag-btn[name="' + flagIndex + '"]').addClass('flagged');
   });
   $("#downloadBtn").on('click',function(){
     window.open(downloadURL);
@@ -191,23 +130,84 @@ function go(){
   $("#accordion").slimScroll({ height:'100%', position: 'left', distance:0, railcolor:'#ffffff', color:'#555555'});
 
   $('#startPolyBtn').on('click',function(){
-    drawnItems.clearLayers();
-    poly.enable();
+    geomType = "poly";
+    $('#deletePolyBtn').show();
+    $('#startPolyBtn').hide();
     $('#submitPolyBtn').hide();
+    $('#startMarkerBtn').hide();
+    drawnItems.eachLayer(function(l){
+      if ( l.setStyle ) l.setStyle({clickable:false});
+    });
+    if ( !instructed.poly ){
+      showDrawingInstructions();
+      return;
+    } 
+    freeDrawLayer = new L.FreeDraw({mode: L.FreeDraw.MODES.ALL })
+      .on( 'created', function(e){
+        var originalPoly = this.polygons[0];
+        poly = L.polygon( originalPoly.getLatLngs(), {color:'#D7217E',fillColor:'#D7217E'} );
+        map.removeLayer( originalPoly );
+        map.removeLayer(freeDrawLayer);
+        freeDrawLayer = undefined;
+        drawnItems.addLayer( poly );
+        poly.enableEdit();
+        $(".leaflet-container").removeClass("drawing");
+        $('#submitPolyBtn').show();
+        showEditingInstructions();
+      })
+    map.addLayer(freeDrawLayer);
+    $(".leaflet-container").addClass("drawing");
   });
   $('#deletePolyBtn').on('click',function(){
-    drawnItems.clearLayers();
-    poly.disable();
+    if ( poly ) drawnItems.removeLayer( poly );
+    if ( marker ) drawnItems.removeLayer( marker );
+    poly = undefined;
+    marker = undefined;
+    if ( freeDrawLayer ){
+      map.removeLayer(freeDrawLayer);
+      freeDrawLayer = undefined;
+      map.dragging.enable();
+      $(".leaflet-container").removeClass("drawing");
+    }
     $('#submitPolyBtn').hide();
+    $('#startPolyBtn').show();
+    $('#startMarkerBtn').show();
+    $('#deletePolyBtn').hide();
+    drawnItems.eachLayer(function(l){
+      if ( l.setStyle ) l.setStyle({clickable:false});
+    });
+     map.off("editable:editing").off("editable:drawing:commit");
   });
+ 
+  $('#startMarkerBtn').on('click',function(){
+    geomType = "point";
+    $('#deletePolyBtn').show();
+    $('#startPolyBtn').hide();
+    $('#submitPolyBtn').hide();
+    $('#startMarkerBtn').hide();
+    marker = map.editTools.startMarker();
+    drawnItems.addLayer( marker );
+    showDrawingInstructions();
+    map.on("editable:editing",function(){
+      $(".leaflet-container").removeClass("drawing");
+      $('#submitPolyBtn').show();
+    }).on("editable:drawing:commit",function(){
+      showEditingInstructions();
+      $(".leaflet-container").removeClass("drawing");
+      $('#submitPolyBtn').show();
+    });
+  })
   $("#submitPolyBtn").click(function(e){
   //CHECK IF POLYGON IS COMPLETE
-    if(drawnItems.getLayers().length<1){bootstrap_alert.warning('Oops, you need to map a neighborhood first.'); }
+   // if(drawnItems.getLayers().length<1){bootstrap_alert.warning('Oops, you need to map a neighborhood first.'); }
     //ELSE OPEN THE SUBMIT DIALOGUE
-    else{
+    //else{
+      // if ( freeDrawLayer) map.removeLayer( freeDrawLayer );
+      // freeDrawLayer = undefined;
       $("#submitModal").modal('show');
       getExistingNeighborhoodNames();
-    }
+      getExistingCityNames();
+    //}
   });
   $(".cty-group > button.btn").on("click", function(){
     num = this.name;
@@ -215,6 +215,7 @@ function go(){
   });
   $(".nbr-group > button.btn").on("click", function(){
     num = this.name;
+    console.log(num)
     nbrhdYears = num;
   });
   $("#allSubmitBtn").click(function(e){
@@ -225,44 +226,74 @@ function go(){
     };
     currentNeighborhood = document.getElementById('neighborhoodName').value;
     currentDescription = document.getElementById('neighborhoodDescription').value;
-    currentCity = selectedCity.name;
+    currentCity = document.getElementById('cityName').value;
     document.getElementById('neighborhoodName').value = '';
     document.getElementById('neighborhoodDescription').value= '';
+    document.getElementById('cityName').value= '';
     $('#deletePolyBtn').hide();
     $('#submitPolyBtn').hide();
     $('#startPolyBtn').show();
+    $('#startMarkerBtn').show();
     $("#submitModal").modal('hide');
     $(".cty-group > button.btn").removeClass('active');
     $(".nbr-group > button.btn").removeClass('active');
-    cityYears = 999;
-    nbrhdYears = 999;
+    //cityYears = 999;
+    //nbrhdYears = 999;
     $('.typeahead').unbind();
 
-    drawnItems.eachLayer(function (layer) {
-      var sql = "INSERT INTO "+tblName+" (the_geom, city, description, name,city_yrs,nbrhd_yrs,flag,loved) VALUES (ST_SetSRID(ST_GeomFromGeoJSON('";
-      var sql2 ='{"type":"MultiPolygon","coordinates":[[[';
-      var a = layer._latlngs;
-      console.log('latlng Arr: length: '+a.length+ " " +a);
-        for (var i = 0; i < a.length; i++) {
-          var lat = (a[i].lat);//.toFixed(4); // rid of rounding that was there for url length issue during dev
-          var lng = (a[i].lng);//.toFixed(4); // rid of rounding that was there for url length issue during dev
-          var st = '['+lng + ',' + lat+']';
-          //if(i<a.length-1){
-            st = st + ',';
-          //};
-        if(i==a.length-1){
-          var lat = (a[0].lat).toFixed(4);
-            var lng = (a[0].lng).toFixed(4);
-          st = st + '['+lng + ',' + lat+']';
+    //drawnItems.eachLayer(function (layer) {
+      var sql;
+      var sql2;
+      if ( poly ){
+        sql = "INSERT INTO "+tblName+" (the_geom, city, description, name,city_yrs,nbrhd_yrs,flag,loved) VALUES (ST_SetSRID(ST_GeomFromGeoJSON('";
+        sql2 ='{"type":"MultiPolygon","coordinates":[[[';
+       // var a = layer._latlngs;
+        var a = poly.getLatLngs();
+        console.log('latlng Arr: length: '+a.length+ " " +a);
+          for (var i = 0; i < a.length; i++) {
+            var lat = (a[i].lat);//.toFixed(4); // rid of rounding that was there for url length issue during dev
+            var lng = (a[i].lng);//.toFixed(4); // rid of rounding that was there for url length issue during dev
+            var st = '['+lng + ',' + lat+']';
+            //if(i<a.length-1){
+              st = st + ',';
+            //};
+          if(i==a.length-1){
+            var lat = (a[0].lat).toFixed(4);
+              var lng = (a[0].lng).toFixed(4);
+            st = st + '['+lng + ',' + lat+']';
+          }
+            sql2 = sql2+st;
         }
-          sql2 = sql2+st;
+        sql2 += "]]]}'";
+        poly
+          .setStyle({color:'#03f',fillColor:'#03f',weight:2,fillOpacity:.1})
+          .bindPopup( currentNeighborhood )
+          .disableEdit();
+        poly = undefined;
+      } else {
+        sql = "INSERT INTO "+tblName+"_point (the_geom, city, description, name,city_yrs,nbrhd_yrs,flag,loved) VALUES (ST_SetSRID(ST_GeomFromGeoJSON('";
+        sql2 = '{"type":"Point","coordinates":[';
+        sql2 += marker.getLatLng().lng;
+        sql2 += ',';
+        sql2 += marker.getLatLng().lat;
+        sql2 += "]}'";
+        marker.bindPopup( currentNeighborhood )
+          .disableEdit();
+        marker = undefined;
+        map.off("editable:editing").off("editable:drawing:commit");
       }
-      sql2 = sql2 + "]]]}'),4326),'"+currentCity+"','"+(currentDescription.replace(/'/g,"''")).replace(/"/g,"''")+"','"+(currentNeighborhood.replace(/'/g,"''")).replace(/"/g,"''")+"','"+cityYears+"','"+nbrhdYears+"','false','0')";
+      
+      sql2 = sql2 + "),4326),'"+currentCity+"','"+(currentDescription.replace(/'/g,"''")).replace(/"/g,"''")+"','"+(currentNeighborhood.replace(/'/g,"''")).replace(/"/g,"''")+"','"+cityYears+"','"+nbrhdYears+"','false','0')";
       var pURL = sql+sql2;
+      console.log(pURL)
       submitToProxy(pURL);
-      drawnItems.clearLayers();
-    });
-    alert("Your neighborhood has been added! Draw more neighborhoods or take a look what has been added so far by clicking 'View Maps'.");
+      
+      drawnItems.eachLayer(function(l){
+        if ( l.setStyle ) l.setStyle({clickable:false});
+      });
+     // drawnItems.clearLayers();
+   // });
+    showAlert("Done!","Your neighborhood has been added! Draw more neighborhoods, or take a look at what has been added so far by clicking 'View Maps'.");
   });
   $(".enableTooltipsLeft").tooltip({container:"body",placement:"left"});
   if(window.location.hash) {
@@ -282,6 +313,18 @@ function go(){
 var loadHoods = function(){
   //remove curren tresults layer
   lg.clearLayers();
+  cartodb.createLayer(map, {
+    user_name: usrName,
+    table_name: tblName+"_point",
+    zIndex:'999',
+    type: 'cartodb',
+    cartodb_logo: false,
+    query: "SELECT * FROM "+tblName+"_point where flag = false",
+    tile_style:'#'+tblName+'_point {marker-fill-opacity: 0.75;marker-line-color: #cd0000;marker-line-width: 5;marker-line-opacity: .25;marker-placement: point;marker-type: ellipse;marker-width: 10;marker-fill: #cd0000;marker-allow-overlap: true;}',
+  })
+  .done(function(layer) {
+    lg.addLayer(layer);
+  });
   cartodb.createLayer(map, {
     user_name: usrName,
     table_name: tblName,
@@ -484,7 +527,7 @@ var clearHighlightedHood = function(idx){
   //todo shift color to end start of fill array
   var find = highlightHoods[idx].fillColor;
   for(var i = 0;i<fillArr.length;i++){
-    console.log(find + '?' + fillArr[i]);
+    //console.log(find + '?' + fillArr[i]);
     if(fillArr[i]===find){
       console.log('found')
       element = fillArr[i];
@@ -517,12 +560,33 @@ var getExistingNeighborhoodNames = function(){
         console.log(text_status)
       }
     }).done(function(data) {
-      var newARR=[];""
+      var newARR=[].concat(hoodNames);  // names.js
       $.each(data.rows, function() {
+        if ( newARR.indexOf( this.name ) == -1 )
       newARR.push(this.name);
     });
     $('#neighborhoodName').typeahead({
       name:"y",
+      local: newARR
+    });
+  });
+}
+var getExistingCityNames = function(){
+  $.ajax(
+    {url:myPath+"/sql?q=SELECT city,COUNT(city) FROM "+tblName+" WHERE flag = false GROUP BY city ORDER BY city ASC",
+      crossDomain:true,
+      dataType:"jsonp",
+      error: function (xhr, text_status, error_thrown) {
+        console.log(text_status)
+      }
+    }).done(function(data) {
+      var newARR=[].concat(cityNames);
+      $.each(data.rows, function() {
+        if ( newARR.indexOf( this.city ) == -1 )
+      newARR.push(this.city);
+    });
+    $('#cityName').typeahead({
+      name:"yy",
       local: newARR
     });
   });
@@ -537,16 +601,17 @@ var animateHeart = function(ex,wy){
     opacity: 0
   }, 600 );
 }
-var goViewState = function(){
+var goViewState = function(e){
+  $('body').attr('class','view');
   loadHoods(); 
-  poly.disable();
-  drawnItems.clearLayers();
+  map.removeLayer(drawnItems);
   $('#btnBar').fadeOut('fast', function() {
     $('.viewMap').fadeIn('fast', function() {
     });
   });
 }
 var goMakeState = function(){
+  $('body').attr('class','make');
   $('.viewMap').fadeOut('fast', function() {
     $('#btnBar').fadeIn('fast', function() {
     });
@@ -560,12 +625,116 @@ var goMakeState = function(){
   toner.setOpacity(1);
   sat.setOpacity(1);
   lg.clearLayers();
+  map.addLayer( drawnItems );
+
+  if ( poly ) drawnItems.removeLayer( poly );
+  if ( marker ) drawnItems.removeLayer( marker );
+  poly = undefined;
+  marker = undefined;
+  if ( freeDrawLayer ){
+    map.removeLayer(freeDrawLayer);
+    freeDrawLayer = undefined;
+    map.dragging.enable();
+    $(".leaflet-container").removeClass("drawing");
+  }
 
   clearSomeHoods(highlightCount);
-  $('#deletePolyBtn').show();
+  $('#deletePolyBtn').hide();
   $('#startPolyBtn').show();
+  $('#startMarkerBtn').show();
   $('#submitPolyBtn').hide();
+
+  if ( !instructed ) showInstructions();
 }
+/*-----------------------------------------
+---------UI helper stuff
+-------------------------------------------*/
+function showInstructions(){
+  if ( instructed.poly && instructed.point ) return;
+  var action = L.Browser.touch ? 'tap' : 'click';
+  var title = 'Draw your first neighborhood!',
+    text = 'To get started, zoom to your area of interest, then ' + action + ' the <b>neighborhood SHAPE</b> or <b>neighborhood POINT</b> button.',
+    src = 'img/instructions1.gif';
+  showAlert( title, text, src );
+}
+function showDrawingInstructions(){
+  if ( instructed[geomType] ) return;
+  if ( geomType == "poly" ){
+    var action = L.Browser.touch ? 'Drag your finger' : 'Click and drag your mouse';
+    var title = 'Now trace the neighborhood',
+      text = action + ' to draw the shape of the neighborhood. You won\'t be able to move the map while drawing, but don\'t worry, you can make changes after you finish.',
+      src = 'img/instructions2_poly.gif';
+    showAlert( title, text, src );
+    $('#generalModal').on('hide.bs.modal',enableDrawing)
+    function enableDrawing(){
+      freeDrawLayer = new L.FreeDraw({mode: L.FreeDraw.MODES.ALL })
+        .on( 'created', function(e){
+          var originalPoly = this.polygons[0];
+          poly = L.polygon( originalPoly.getLatLngs(), {color:'#D7217E',fillColor:'#D7217E'} );
+          map.removeLayer( originalPoly );
+          map.removeLayer(freeDrawLayer);
+          freeDrawLayer = undefined;
+          drawnItems.addLayer( poly );
+          poly.enableEdit();
+          $(".leaflet-container").removeClass("drawing");
+          $('#submitPolyBtn').show();
+          showEditingInstructions();
+        })
+      map.addLayer(freeDrawLayer);
+      $(".leaflet-container").addClass("drawing");
+      $('#generalModal').off('hide.bs.modal',enableDrawing)
+    }
+  } else {
+    var action = L.Browser.touch ? 'Drag your finger' : 'Click and drag your mouse';
+    var title = 'Now place the marker',
+      text = L.Browser.touch ? 'Drag the marker to the desired location, then tap <b>Save Neighborhood</b>.'
+        : 'Move your mouse to the desired location, then click to drop the marker.'
+      src = L.Browser.touch ? 'img/instructions3_point.gif' : 'img/instructions2_point.gif';
+      if ( L.Browser.touch ) instructed[geomType] = true;
+    showAlert( title, text, src );
+  }
+  
+}
+function showEditingInstructions(){
+  if ( instructed[geomType] ) return;
+  instructed[geomType] = true;
+  if ( geomType == "poly" ){
+    var action = L.Browser.touch ? 'tap' : 'click';
+    var title = 'Looking good!',
+      text = 'You can now adjust the shape of the neighborhood. Drag the white squares to change the shape, or ' + action + ' them to delete corners. When you are satisfied with the shape, ' + action + ' <b>Save Neighborhood</b> to submit it.',
+      src = 'img/instructions3_poly.gif';
+    showAlert( title, text, src );
+  } else {
+    if ( L.Browser.touch ) return;
+    var title = 'Looking good!',
+      text = 'You can click and drag the marker to edit its location. When you are satisfied, click <b>Save Neighborhood</b> to submit it.',
+      src = 'img/instructions3_point.gif';
+    showAlert( title, text, src );
+  }
+}
+function showAlert( title, text, imageSrc, buttonLabel ){
+  var m = $("#generalModal");
+  $('.modal-body', m).empty();
+
+  $('h3',m).html(title);
+  
+  if ( imageSrc ){
+    $('<div class="img-container">')
+      .html('<img src="'+imageSrc+'">')
+      .appendTo( $('.modal-body', m) );
+  }
+
+  $('<p>')
+    .html(text)
+    .appendTo( $('.modal-body', m) );
+
+  buttonLabel = buttonLabel || 'OK';
+  $('.btn-default',m).html(buttonLabel);
+
+  m.modal('show');
+}
+
+
 /*-----------------------------------------
 ---------Hey, Listeners! Lookout behind you! |o| |<{}>| |o| 
 -------------------------------------------*/
@@ -607,10 +776,17 @@ $(document).on('click',".flag-btn",function(){
 
 });
 $(document).on('click',".heart-btn",function(event){
-  var heartIndex = $(this).attr("name");
-  var q = "update "+tblName+" set loved = loved + 1 where cartodb_id = "+heartIndex;
+  var heartIndex = $(this).attr("name"),
+    q;
+  if ( !$(this).hasClass('flagged') ){
+    q = "update "+tblName+" set loved = loved + 1 where cartodb_id = "+heartIndex;
+    animateHeart(event.clientX,event.clientY);
+    $(this).addClass('flagged')
+  } else {
+    q = "update "+tblName+" set loved = loved - 1 where cartodb_id = "+heartIndex;
+    $(this).removeClass('flagged')
+  }
   submitToProxy(q);
-  animateHeart(event.clientX,event.clientY);
 });
 $(document).on("hidden.bs.collapse", ".collapse", function () {resizeHandler()});
 $(window).resize(function(){resizeHandler()});

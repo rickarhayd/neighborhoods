@@ -1,6 +1,3 @@
-html,body{
-	min-width: 800PX;
-}
 #map{
 	position: absolute;
 	left: 0px;
@@ -109,6 +106,9 @@ a:hover {
 	font-size: 10px;
 	color:#fff;
 }
+.loveflag.flagged{
+  color: red;
+}
 .loveIcon{
 	position: absolute;
 	z-index: 99999;
@@ -155,7 +155,6 @@ a:hover {
 	border-top-style: none;
 }
 .navbar {
-	min-width: 800px;
 	background:rgba(0,0,0,.8);
 }
 .nav, .navbar-nav{
@@ -233,4 +232,115 @@ a:hover {
 }
 .tt-suggestion p {
 	margin: 0;
+}
+.btn{
+  -webkit-box-shadow: 3px 3px 5px 0px rgba(0,0,0,0.5);
+  -moz-box-shadow: 3px 3px 5px 0px rgba(0,0,0,0.5);
+  box-shadow: 3px 3px 5px 0px rgba(0,0,0,0.5);
+}
+#btnBar .btn{
+  display: none;
+}
+#btnBar .btn#startPolyBtn, #btnBar .btn#startMarkerBtn{
+	background-color: #ccd8f0;
+	font-weight: bold;
+	border-color: #333;
+  display: block;
+  width: 260px;
+  text-align: left;
+}
+
+#btnBar .btn#startMarkerBtn{
+  margin-top: 10px;
+}
+
+svg.tracer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+path.tracer{
+	fill: none;
+	stroke: #D7217E;
+	stroke-opacity: .9;
+}
+.modal-body .img-container{
+  text-align: center;
+  margin-bottom: 15px;
+}
+.modal-footer{
+  margin-top: 0;
+}
+
+.navbar-brand.abbrev{ display: none; }
+
+.leaflet-container.drawing{
+  cursor: url(../img/pencil.png) 0 32, pointer;
+}
+
+@media (max-width: 400px){
+  html, body{ max-width: 100%; overflow: hidden; }
+  .navbar-brand{ display: none; }
+  .navbar-brand.abbrev{ display: block; }
+  #descriptionDiv{
+    top: 120px;
+    left: 20px;
+    max-width: 150px;
+  }
+  #generalModal img{
+    max-width: 100%;
+  }
+  .modal-body{
+    
+    overflow: auto;
+    padding: 15px;
+  }
+  .leaflet-top{
+    top: auto;
+    bottom: 25px;
+  }
+  a.link-icons, .linksbackground{ display: none; }
+  #submitModal .col-xs-4, #submitModal .col-xs-8{
+    float: none;
+    width: auto;
+    padding-top: 0;
+  }
+   #submitModal label br{
+    display: none;
+   }
+   #cityLivingGroup .btn, #neighborhoodLivingGroup .btn{
+    padding: 6px;
+   }
+   .modal h3{
+    margin: 0 20px 0 0;
+   }
+
+   #descriptionDiv .col-xs-3{
+    width: 100%;
+   }
+   #descriptionDiv .col-xs-9{
+    width: 100%;
+   }
+   .icon-row{
+    float: right;
+    margin-top: -55px;
+    margin-right: 5px;
+    width: 50%;
+   }
+   .icon-row > div:first-child{
+    margin-bottom: 10px;
+   }
+   .loveflag{
+    font-size: 18px;
+   }
+   .lovecount{
+    display: none;
+   }
+   #descriptionDiv .detailText > .row{
+    margin-bottom: 5px;
+   }
 }
