@@ -6,6 +6,9 @@ This is a Boston-flavored version of https://github.com/enam/neighborhoods. It's
 
 See more about this particular project at http://bostonography.com/2015/map-your-neighborhood-again/
 
+**Please read the original README below, and then note one addition in my implementation:**
+This version stores point locations in a separate table. In CartoDB, duplicate your neighborhoods table and give it the same name but with a `_point` extension.
+
 * * *
 *slightly modified original README from https://github.com/enam/neighborhoods below*
 
