@@ -7,7 +7,7 @@ This is a Boston-flavored version of https://github.com/enam/neighborhoods. It's
 See more about this particular project at http://bostonography.com/2015/map-your-neighborhood-again/
 
 * * *
-*original README from https://github.com/enam/neighborhoods below*
+*slightly modified original README from https://github.com/enam/neighborhoods below*
 
 Crowd sourcing neighborhood boundaries, stories, and descriptions. Making pretty maps.
 
@@ -22,7 +22,7 @@ This project is designed to collect boundaries and descriptions of neighborhoods
 
 3. Update the API key and such in [cartodbProxy.php](https://github.com/enam/neighborhoods/blob/master/php/cartodbProxy.php). AND move this file somewhere above your web root.
 
-4. Update the include path in [callProxy.php](https://github.com/enam/neighborhoods/blob/master/php/callProxy.php) for wherever you put cartodbProxy.php on your server.
+4. Update the include path in [add.php](https://github.com/enam/neighborhoods/blob/master/php/add.php), [flag.php](https://github.com/enam/neighborhoods/blob/master/php/flag.php), and [heart.php](https://github.com/enam/neighborhoods/blob/master/php/heart.php) for wherever you put cartodbProxy.php on your server.
 
 5. Change [googleanalytics.js](https://github.com/enam/neighborhoods/blob/master/js/googleanalytics.js) to use your analytics code if you want, or remove the script that includes it from line 215 of [index.html](https://github.com/enam/neighborhoods/blob/master/index.html). 
 
