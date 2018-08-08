@@ -2,7 +2,7 @@
 ----- Config Vars: Change these to configure for your city or cities-------------
 ---------------------------*/
 var myCities = [  //NAME AND BOUNDS OF CITIES 
-  {name:"Wellington",bnds:[[42.195649,-71.285258],[42.550992,-70.836535]]}
+  {name:"Wellington",bnds:[[-41.1613,174.5820],[-41.3907,175.0386]]}
 ]
 ,tblName = "wellington_neighborhoods" // cartoDB table name
 ,usrName = "rickard" // your cartoDB username
