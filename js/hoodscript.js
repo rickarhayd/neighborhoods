@@ -2,15 +2,14 @@
 ----- Config Vars: Change these to configure for your city or cities-------------
 ---------------------------*/
 var myCities = [  //NAME AND BOUNDS OF CITIES 
-  {name:"Boston",bnds:[[42.195649,-71.285258],[42.550992,-70.836535]]}
+  {name:"Wellington",bnds:[[42.195649,-71.285258],[42.550992,-70.836535]]}
 ]
-,tblName = "hoods" // cartoDB table name
-,usrName = "bostonography" // your cartoDB username
-,brandText = "Mapping Greater Boston's neighborhoods" // top left text and link on site
+,tblName = "wellington_neighborhoods" // cartoDB table name
+,usrName = "rickard" // your cartoDB username
+,brandText = "Mapping Wellington's neighborhoods" // top left text and link on site
 ,brandLink = "http://bostonography.com" //top left link on site
-,giturl = "https://github.com/enam/neighborhoods" //Only change this if you want to link to a fork you made, otherwise you can leave the link to the original repo
-,twiturl = "https://twitter.com/bostonography" //Links to my twit acct, change it if you want or remove twitter link altogether
-,myPath = "http://bostonography.cartodb.com/api/v2"; //this is the root path to your cartoDB instance with the v2 api param
+,giturl = "https://github.com/rickarhayd/neighborhoods" //Only change this if you want to link to a fork you made, otherwise you can leave the link to the original repo
+,myPath = "http://rickarhayd.carto.com/api/v1"; //this is the root path to your cartoDB instance with the v2 api param
 
 /*---------------------------
 ----- Application Vars -------------
