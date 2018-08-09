@@ -5,8 +5,8 @@ var myCities = [  //NAME AND BOUNDS OF CITIES
   {name:"Wellington",bnds:[[-41.1613,174.5820],[-41.3907,175.0386]]}
 ]
 ,tblName = "wellington_neighborhoods" // cartoDB table name
-,usrName = "rickard" // your cartoDB username
-,brandText = "Mapping Wellington's neighborhoods" // top left text and link on site
+,usrName = "rickarhayd" // your cartoDB username
+,brandText = "Mapping Wellington's Neighborhoods" // top left text and link on site
 ,brandLink = "http://bostonography.com" //top left link on site
 ,giturl = "https://github.com/rickarhayd/neighborhoods" //Only change this if you want to link to a fork you made, otherwise you can leave the link to the original repo
 ,myPath = "http://rickarhayd.carto.com/api/v1"; //this is the root path to your cartoDB instance with the v2 api param
